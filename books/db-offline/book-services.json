@@ -1,0 +1,21 @@
+{
+    "Table": {
+        "TableName": "microservice-contact-books",
+        "KeySchema": [
+            {
+                "AttributeName": "bookId",
+                "KeyType": "HASH"
+            }
+        ],
+        "AttributeDefinitions": [
+            {
+                "AttributeName": "bookId",
+                "AttributeType": "S"
+            }
+        ],
+        "ProvisionedThroughput": {
+            "ReadCapacityUnits": 1,
+            "WriteCapacityUnits": 1
+        }
+    }
+}

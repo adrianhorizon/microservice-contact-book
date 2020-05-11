@@ -1,0 +1,95 @@
+service: microservice-contact-books
+
+frameworkVersion: ">=1.1.0 <2.0.0"
+
+plugins:
+  - serverless-dynamodb-local
+  - serverless-offline
+
+custom:
+  dynamodb:
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+    migration:
+      dir: books/db-offline/
+  serverless-offline:
+    port: 3000
+
+provider:
+  name: aws
+  runtime: python3.8
+  profile: default
+  environment:
+    BOOK_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.BOOK_TABLE}"
+
+functions:
+  create:
+    handler: books/books.create_book
+    events:
+      - http:
+          path: books
+          method: post
+          cors: true
+
+  list:
+    handler: books/books.list_book
+    events:
+      - http:
+          path: books
+          method: get
+          cors: true
+
+  get:
+    handler: books/books.get_book
+    events:
+      - http:
+          path: books/{id}
+          method: get
+          cors: true
+
+  update:
+    handler: books/books.update_book
+    events:
+      - http:
+          path: books/{id}
+          method: put
+          cors: true
+
+  delete:
+    handler: books/books.delete_book
+    events:
+      - http:
+          path: books/{id}
+          method: delete
+          cors: true
+
+resources:
+  Resources:
+    TodosDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: bookId
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: bookId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.BOOK_TABLE}
